@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mera Galla (Rajasthani Matka)</title>
+<style>
+  :root{
+    /* Coin gradients */
+    --silver: radial-gradient(circle at 30% 30%, #eeeeee 0%, #d9d9d9 35%, #bfbfbf 70%, #a9a9a9 100%);
+    --gold:   radial-gradient(circle at 30% 30%, #ffe680 0%, #ffd24d 35%, #ebb51a 70%, #c69212 100%);
+    --bi10:   radial-gradient(circle, #cfcfcf 0 55%, transparent 56%), radial-gradient(circle at 30% 30%, #ffe680 0%, #ffd24d 35%, #ebb51a 70%, #c69212 100%);
+
+    /* Note gradients (tasteful approximations) */
+    --n10:  linear-gradient(135deg, #e8c7a0, #cfa071);
+    --n20:  linear-gradient(135deg, #d9f3df, #9fe0b2);
+    --n50:  linear-gradient(135deg, #bfe6ff, #7fd1ff);
+    --n100: linear-gradient(135deg, #e0c6ff, #b284ff);
+    --n200: linear-gradient(135deg, #fff2b3, #f2df6b);
+    --n500: linear-gradient(135deg, #bfe3c8, #86c79d);
+
+    --clay1: #c1440e;   /* base clay */
+    --clay2: #f4a261;   /* highlight */
+    --clayEdge: #8b3e2f;
+    --fest-red:#e63946;
+    --fest-blue:#3a86ff;
+    --fest-yellow:#ffd60a;
+    --fest-green:#2a9d8f;
+    --fest-pink:#ff5cac;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+    background: #fff7ef;
+    color:#3b2f2f;
+    margin:0; padding:24px;
+    text-align:center;
+  }
+  h1{ color:#d35400; margin:4px 0 12px }
+
+  .wrap{
+    max-width:720px; margin:0 auto;
+    background:#ffffff;
+    border-radius:16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    padding:18px 16px 24px;
+  }
+
+  /* Matka area */
+  #galla-stage{
+    position: relative;
+    width: 260px; height: 320px;
+    margin: 10px auto 6px;
+  }
+  #money-container{
+    position:absolute; inset:0;
+    pointer-events:none; overflow:visible;
+  }
+
+  /* Matka built from layers so we can shatter it */
+  #matka{
+    position:absolute;
+    left:50%; bottom:6px; transform:translateX(-50%);
+    width: 190px; height: 210px;
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,.2));
+  }
+  .matka-body{
+    position:absolute; inset:auto 0 0 0; margin:auto;
+    width: 190px; height: 180px;
+    border-radius: 60% 60% 50% 50% / 55% 55% 45% 45%;
+    background: radial-gradient(120px 100px at 60% 30%, var(--clay2), var(--clay1) 60%);
+    border: 4px solid var(--clayEdge);
+  }
+  .matka-neck{
+    position:absolute; left:50%; transform:translateX(-50%);
+    bottom: 160px;
+    width: 110px; height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(60px 30px at 50% 30%, #f7b27a, #c66a2f 70%);
+    border: 4px solid var(--clayEdge);
+    z-index:2;
+  }
+  .matka-lip{
+    position:absolute; left:50%; transform:translateX(-50%);
+    bottom: 186px;
+    width: 135px; height: 26px;
+    border-radius: 50%;
+    background: radial-gradient(70px 18px at 50% 40%, #f7b27a, #c66a2f 70%);
+    border: 4px solid var(--clayEdge);
+    z-index:3;
+  }
+
+  /* Rajasthani paint bands & motifs */
+  .band{
+    position:absolute; left:8px; right:8px; height:16px;
+    border-radius:10px;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.08);
+  }
+  .band.b1{ bottom: 118px; background:
+      repeating-linear-gradient(90deg, var(--fest-yellow) 0 16px, var(--fest-red) 16px 32px, var(--fest-green) 32px 48px, var(--fest-blue) 48px 64px);
+    opacity:.95; }
+  .band.b2{ bottom: 82px; background:
+      repeating-linear-gradient(135deg, #fff 0 8px, var(--fest-pink) 8px 16px, #fff 16px 24px, var(--fest-green) 24px 32px); opacity:.9; }
+  .motifs{
+    position:absolute; left:0; right:0; bottom:26px; height:40px;
+    background:
+      radial-gradient(circle at 20% 50%, #fff 0 3px, transparent 4px),
+      radial-gradient(circle at 40% 50%, #fff 0 3px, transparent 4px),
+      radial-gradient(circle at 60% 50%, #fff 0 3px, transparent 4px),
+      radial-gradient(circle at 80% 50%, #fff 0 3px, transparent 4px);
+    opacity:.9;
+    pointer-events:none;
+  }
+
+  /* Shards created at break time */
+  .shard{
+    position:absolute;
+    width: 90px; height:90px;
+    background: radial-gradient(120px 100px at 60% 30%, var(--clay2), var(--clay1) 60%);
+    border:3px solid var(--clayEdge);
+    clip-path: polygon(0% 0%, 100% 10%, 80% 100%, 10% 80%);
+    z-index:4;
+    will-change: transform, opacity;
+  }
+
+  /* Money pieces */
+  .money{ position:absolute; pointer-events:none; transform-origin:center; }
+  .coin{
+    width:40px; height:40px; border-radius:50%;
+    box-shadow: inset -2px -2px 6px rgba(0,0,0,.25), inset 2px 2px 6px rgba(255,255,255,.35);
+  }
+  .note{
+    width:64px; height:32px; border-radius:6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.2), inset 0 0 1px rgba(255,255,255,.4);
+  }
+
+  /* Controls */
+  .controls{ margin-top:10px }
+  .row{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:6px 0 }
+  button{
+    background:#f1f1f1; border:0; padding:8px 12px; border-radius:10px; cursor:pointer;
+    box-shadow: 0 2px 0 rgba(0,0,0,.1);
+  }
+  button:hover{ transform:translateY(-1px) }
+  #breakButton{ display:none; background:#2a9d8f; color:#fff }
+
+  /* Balance + goal */
+  #balance{ font-size:1.1rem; margin:8px 0 10px }
+  .goal-wrap{ max-width:420px; margin:10px auto 0 }
+  .goal-name{
+    display:flex; gap:6px; justify-content:center; align-items:center; margin-bottom:6px;
+  }
+  input[type="text"], input[type="number"]{
+    border:1px solid #ddd; border-radius:10px; padding:8px 10px; min-width:140px;
+  }
+  .goal-title{ font-weight:600; margin:6px 0 2px }
+  .bar{ width:100%; height:18px; background:#eee; border-radius:10px; overflow:hidden }
+  .fill{ width:0%; height:100%; background:#d35400; transition:width .45s ease; }
+
+  /* Confetti */
+  .confetti{
+    position:fixed; width:10px; height:10px; border-radius:50%;
+    opacity:.95; pointer-events:none; z-index:999;
+    animation: fall 3.2s linear forwards;
+  }
+  @keyframes fall{
+    0%{ transform: translateY(-20px) rotate(0deg); }
+    100%{ transform: translateY(100vh) rotate(540deg); opacity:0; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Mera Galla</h1>
+
+    <div id="galla-stage">
+      <!-- Matka -->
+      <div id="matka">
+        <div class="matka-body">
+          <div class="band b1"></div>
+          <div class="band b2"></div>
+          <div class="motifs"></div>
+        </div>
+        <div class="matka-neck"></div>
+        <div class="matka-lip"></div>
+      </div>
+
+      <!-- Money falls inside -->
+      <div id="money-container"></div>
+    </div>
+
+    <div id="balance">Balance: ₹0</div>
+
+    <div class="goal-wrap">
+      <div class="goal-name">
+        <span>Goal name:</span>
+        <input id="goalName" type="text" placeholder="Goa trip / New phone" />
+      </div>
+      <div style="display:flex; gap:8px; justify-content:center; align-items:center; margin-bottom:8px">
+        <label for="goal">Goal amount ₹</label>
+        <input id="goal" type="number" min="1" placeholder="5000" />
+        <button id="saveGoal">Save Goal</button>
+      </div>
+      <div class="goal-title" id="goalTitle">No goal set</div>
+      <div class="bar"><div id="progress" class="fill"></div></div>
+    </div>
+
+    <div class="controls">
+      <div class="row">
+        <button onclick="addMoney('1coin')">₹1 Coin</button>
+        <button onclick="addMoney('2coin')">₹2 Coin</button>
+        <button onclick="addMoney('5coin')">₹5 Coin</button>
+        <button onclick="addMoney('10coin')">₹10 Coin</button>
+      </div>
+      <div class="row">
+        <button onclick="addMoney('10note')">₹10 Note</button>
+        <button onclick="addMoney('20note')">₹20 Note</button>
+        <button onclick="addMoney('50note')">₹50 Note</button>
+        <button onclick="addMoney('100note')">₹100 Note</button>
+        <button onclick="addMoney('200note')">₹200 Note</button>
+        <button onclick="addMoney('500note')">₹500 Note</button>
+      </div>
+      <div class="row">
+        <button id="breakButton" onclick="breakMatka()">Break the Matka</button>
+        <button onclick="resetAll()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Sounds -->
+    <audio id="coinSound" src="https://www.fesliyanstudios.com/play-mp3/387" preload="auto"></audio>
+    <audio id="coinSound2" src="https://www.fesliyanstudios.com/play-mp3/388" preload="auto"></audio>
+    <audio id="noteSound" src="https://www.fesliyanstudios.com/play-mp3/384" preload="auto"></audio>
+    <audio id="noteSound2" src="https://www.fesliyanstudios.com/play-mp3/385" preload="auto"></audio>
+    <audio id="breakSound" src="https://www.fesliyanstudios.com/play-mp3/button-20.mp3" preload="auto"></audio>
+  </div>
+
+<script>
+  // Persistent state
+  let balance   = parseInt(localStorage.getItem('mg_balance')   || '0', 10);
+  let goal      = parseInt(localStorage.getItem('mg_goal')      || '0', 10);
+  let goalName  =           localStorage.getItem('mg_goalName') || '';
+
+  const moneyContainer = document.getElementById('money-container');
+  const progressBar    = document.getElementById('progress');
+  const breakButton    = document.getElementById('breakButton');
+  const goalInput      = document.getElementById('goal');
+  const goalNameInput  = document.getElementById('goalName');
+  const goalTitle      = document.getElementById('goalTitle');
+
+  // Value map + visual backgrounds
+  const MONEY = {
+    '1coin'  : { value: 1,  kind:'coin', bg: getComputedStyle(document.documentElement).getPropertyValue('--silver') },
+    '2coin'  : { value: 2,  kind:'coin', bg: getComputedStyle(document.documentElement).getPropertyValue('--silver') },
+    '5coin'  : { value: 5,  kind:'coin', bg: getComputedStyle(document.documentElement).getPropertyValue('--gold')   },
+    '10coin' : { value: 10, kind:'coin', bg: getComputedStyle(document.documentElement).getPropertyValue('--bi10')   },
+
+    '10note' : { value:10,  kind:'note', bg: getComputedStyle(document.documentElement).getPropertyValue('--n10')  },
+    '20note' : { value:20,  kind:'note', bg: getComputedStyle(document.documentElement).getPropertyValue('--n20')  },
+    '50note' : { value:50,  kind:'note', bg: getComputedStyle(document.documentElement).getPropertyValue('--n50')  },
+    '100note': { value:100, kind:'note', bg: getComputedStyle(document.documentElement).getPropertyValue('--n100') },
+    '200note': { value:200, kind:'note', bg: getComputedStyle(document.documentElement).getPropertyValue('--n200') },
+    '500note': { value:500, kind:'note', bg: getComputedStyle(document.documentElement).getPropertyValue('--n500') }
+  };
+
+  // Initialize UI from storage
+  function renderState(){
+    document.getElementById('balance').innerText = `Balance: ₹${balance}`;
+    goalInput.value = goal || '';
+    goalNameInput.value = goalName || '';
+    goalTitle.textContent = goal > 0
+      ? (goalName ? `${goalName} — ₹${goal}` : `Goal: ₹${goal}`)
+      : 'No goal set';
+
+    updateProgress();
+    checkGoal();
+  }
+
+  function updateProgress(){
+    const pct = goal > 0 ? Math.min((balance/goal)*100, 100) : 0;
+    progressBar.style.width = pct + '%';
+  }
+
+  function checkGoal(){
+    if(goal > 0 && balance >= goal){
+      breakButton.style.display = 'inline-block';
+      celebrate();
+    } else {
+      breakButton.style.display = 'none';
+    }
+  }
+
+  function saveGoal(){
+    goal = parseInt(goalInput.value || '0', 10);
+    goalName = (goalNameInput.value || '').trim();
+    localStorage.setItem('mg_goal', goal);
+    localStorage.setItem('mg_goalName', goalName);
+    renderState();
+  }
+  document.getElementById('saveGoal').addEventListener('click', saveGoal);
+
+  // Add money piece with animation
+  function addMoney(key){
+    const cfg = MONEY[key];
+    if(!cfg) return;
+
+    balance += cfg.value;
+    localStorage.setItem('mg_balance', String(balance));
+    document.getElementById('balance').innerText = `Balance: ₹${balance}`;
+
+    const el = document.createElement('div');
+    el.className = `money ${cfg.kind}`;
+    el.style.background = cfg.bg;
+
+    // random x inside matka mouth area
+    const stage = document.getElementById('galla-stage');
+    const mouthCenterX = stage.clientWidth/2;
+    const rand = (Math.random()*60 - 30);
+    el.style.left = (mouthCenterX + rand - (cfg.kind==='coin'?20:32)) + 'px';
+    el.style.top  = '0px';
+    moneyContainer.appendChild(el);
+
+    // Sounds
+    if(cfg.kind==='coin'){
+      (Math.random()<0.5 ? coinSound : coinSound2).play();
+    } else {
+      (Math.random()<0.5 ? noteSound : noteSound2).play();
+    }
+
+    // Motion: coins spin & bounce, notes flutter
+    const drop = 200 + Math.random()*20;
+    const rot  = (cfg.kind==='coin') ? (180 + Math.random()*360) : (5 + Math.random()*15) * (Math.random()<.5?-1:1);
+
+    if(cfg.kind==='coin'){
+      el.animate([
+        { transform:'translateY(-20px) rotate(0deg)' },
+        { transform:`translateY(${drop}px) rotate(${rot}deg)` },
+        { transform:`translateY(${drop-18}px) rotate(${rot}deg)` },
+        { transform:`translateY(${drop}px) rotate(${rot}deg)` }
+      ], { duration: 950+Math.random()*250, easing:'ease-out', fill:'forwards' });
+    } else {
+      el.animate([
+        { transform:'translateY(-10px) rotate(0deg)' },
+        { transform:`translateY(${drop*0.6}px) rotate(${rot*0.6}deg)` },
+        { transform:`translateY(${drop}px) rotate(${rot}deg)` }
+      ], { duration: 1100+Math.random()*350, easing:'ease-out', fill:'forwards' });
+    }
+
+    updateProgress();
+    checkGoal();
+  }
+
+  // Celebration confetti
+  function celebrate(){
+    for(let i=0;i<70;i++){
+      const c = document.createElement('div');
+      c.className='confetti';
+      c.style.backgroundColor = `hsl(${Math.random()*360},100%,50%)`;
+      c.style.left = Math.random()*100 + 'vw';
+      c.style.top  = '-20px';
+      c.style.width = c.style.height = (6 + Math.random()*8) + 'px';
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(), 3400);
+    }
+    // sparkles
+    for(let i=0;i<28;i++){
+      const s = document.createElement('div');
+      s.className='confetti';
+      s.style.backgroundColor = 'rgba(255,255,180,.95)';
+      s.style.left = (40 + Math.random()*20) + 'vw';
+      s.style.top  = '60vh';
+      s.style.width = s.style.height = (2 + Math.random()*3) + 'px';
+      s.style.borderRadius='50%';
+      s.style.animationDuration = (1.6 + Math.random()*1) + 's';
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(), 2200);
+    }
+  }
+
+  // Break the matka into shards + spill money
+  function breakMatka(){
+    document.getElementById('breakSound').play();
+
+    const matka = document.getElementById('matka');
+    const bodyRect = matka.getBoundingClientRect();
+    const stageRect = document.getElementById('galla-stage').getBoundingClientRect();
+    const baseLeft = bodyRect.left - stageRect.left + 20;
+    const baseTop  = bodyRect.top  - stageRect.top  + 60;
+
+    // Create 6 shards with different clip paths
+    const shapes = [
+      'polygon(8% 8%, 92% 10%, 70% 92%, 12% 80%)',
+      'polygon(0% 20%, 80% 0%, 100% 60%, 10% 100%)',
+      'polygon(10% 0%, 100% 0%, 90% 70%, 30% 90%)',
+      'polygon(0% 0%, 90% 10%, 100% 100%, 10% 80%)',
+      'polygon(0% 40%, 60% 0%, 100% 20%, 40% 100%)',
+      'polygon(20% 10%, 100% 20%, 80% 100%, 0% 90%)',
+    ];
+
+    for(let i=0;i<6;i++){
+      const sh = document.createElement('div');
+      sh.className='shard';
+      sh.style.left = (baseLeft + (i%3)*40) + 'px';
+      sh.style.top  = (baseTop + Math.floor(i/3)*40) + 'px';
+      sh.style.clipPath = shapes[i%shapes.length];
+      moneyContainer.appendChild(sh);
+
+      const x = (Math.random()*360 - 180);
+      const y = (120 + Math.random()*160);
+      const r = (Math.random()*720 - 360);
+
+      sh.animate([
+        { transform:'translate(0,0) rotate(0deg)', opacity:1 },
+        { transform:`translate(${x}px, ${y}px) rotate(${r}deg)`, opacity:0 }
+      ], { duration: 1600 + Math.random()*500, easing:'cubic-bezier(.2,.8,.2,1)', fill:'forwards' });
+    }
+
+    // Also toss existing money outward a bit
+    document.querySelectorAll('.money').forEach(m=>{
+      const x = (Math.random()*280 - 140);
+      const y = (80 + Math.random()*160);
+      const r = (Math.random()*540 - 270);
+      m.animate([
+        { transform:'translate(0,0) rotate(0deg)' },
+        { transform:`translate(${x}px, ${y}px) rotate(${r}deg)` }
+      ], { duration: 1200 + Math.random()*400, easing:'ease-out', fill:'forwards' });
+    });
+
+    celebrate();
+
+    // After a moment, clear & reset (keep goal)
+    setTimeout(()=>{
+      moneyContainer.innerHTML = '';
+      matka.innerHTML = `
+        <div class="matka-body">
+          <div class="band b1"></div>
+          <div class="band b2"></div>
+          <div class="motifs"></div>
+        </div>
+        <div class="matka-neck"></div>
+        <div class="matka-lip"></div>
+      `;
+      balance = 0;
+      localStorage.setItem('mg_balance','0');
+      document.getElementById('balance').innerText = 'Balance: ₹0';
+      updateProgress();
+      checkGoal();
+    }, 1800);
+  }
+
+  // Reset everything (also goal)
+  function resetAll(){
+    if(!confirm('Reset balance and goal?')) return;
+    balance = 0; goal = 0; goalName = '';
+    localStorage.removeItem('mg_balance');
+    localStorage.removeItem('mg_goal');
+    localStorage.removeItem('mg_goalName');
+    moneyContainer.innerHTML = '';
+    renderState();
+  }
+
+  // Boot
+  window.addEventListener('load', renderState);
+</script>
+</body>
+</html>
